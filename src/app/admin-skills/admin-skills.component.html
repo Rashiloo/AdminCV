@@ -1,0 +1,45 @@
+<div class="skills-section">
+  <!-- <div class="card"> -->
+    <h2>Habilidades</h2>
+  <!-- </div> -->
+
+  <div class="card">
+    <form (ngSubmit)="AgregarSkill()">
+      <label for="skill">Habilidad</label>
+      <input
+        type="text"
+        id="skill"
+        class="txt"
+        name="skill"
+        placeholder="Escribe aqui"
+        [(ngModel)]="mySkill.skill"
+      />
+
+      <label for="level">Nivel</label>
+      <input
+        type="number"
+        id="level"
+        class="txt"
+        name="level"
+        placeholder="Escribe aqui"
+        [(ngModel)]="mySkill.level"
+      />
+
+      <input type="submit" class="btn" value="{{ btntxt }}" (click)="AgregarSkill()">
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Tus habilidades</h3>
+    <div *ngFor="let skill of skills" class="skill-item">
+      <div class="skill-header">
+        <strong>{{ skill.skill }}</strong>
+        <!-- <span>{{ skill.level }}%</span> -->
+        <button class="btn danger" (click)="deleteSkill(skill.id)">Borrar</button>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="skill.level"></div>
+      </div>
+    </div>
+  </div>
+</div>
