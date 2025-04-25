@@ -28,7 +28,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: tu-usuario-docker/admin-cv  
+          images: rashiloo/admin-cv  
           tags: |
             type=ref,event=branch 
             type=ref,event=tag     
