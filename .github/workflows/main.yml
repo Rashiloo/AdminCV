@@ -1,25 +1,39 @@
-name: Angular_DockerImage
+name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "master" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: admin-cv  # Nombre de la imagen (en minúsculas)
+  REPO_OWNER: ${{ github.repository_owner | lower }}  # Usuario en minúsculas
 
 jobs:
-  angular_deploy:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Docker login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+      - name: Log in to Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USER }}/admincv:${{ github.sha }} .
-
-      - name: Push Docker image
-        run: docker push ${{ secrets.DOCKER_USER }}/admincv:${{ github.sha }}
-          ${{ secrets.DOCKER_USER }}/admin_mycv:${{ github.sha }}
-      - name: Docker Push
-        run: docker push ${{ secrets.DOCKER_USER }}/admin_mycv:${{ github.sha }}
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.ref == 'refs/heads/master' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.REPO_OWNER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
