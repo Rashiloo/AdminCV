@@ -1,38 +1,43 @@
-name: Build and Push Docker Image
+name: Angular_DockerImage_v1
 
 on:
   push:
-    branches: [ "master" ] 
+    branches: [ master ]
   pull_request:
-    branches: [ "master" ]
-
-env:
-  REGISTRY: ghcr.io 
-  IMAGE_NAME: admin-cv  
+    branches: [ master ]
 
 jobs:
-  build-and-push:
+  angular_deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write  # Necesario para GHCR
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
-      - name: Log in to Registry
-        uses: docker/login-action@v3
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v1
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}  # Para GHCR (usa secrets para Docker Hub)
-          password: ${{ secrets.GITHUB_TOKEN }}  # Token automático de GitHub
+          node-version: 20.x
 
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: ${{ github.ref == 'refs/heads/master' }}  # Solo push en master
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: npm install
+        run: npm ci
+
+      - name: build
+        run: |
+          npm run build --output-path=docs
+      - name: docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - name: Download and run the Docker base image
+        run: docker run -d --name http_admin_cv httpd
+
+      - name: copy model to the Docker image
+        run: docker cp docs/. http_admin_cv:/usr/local/apache2/htdocs
+
+      - name: Build the custom Docker image
+        run: |
+          docker commit --change "ENV MODEL_NAME http_admin_cv" http_admin_cv \
+          ${{ secrets.DOCKER_USER }}/admin_mycv:${{ github.sha }}
+      - name: Docker Push
+        run: docker push ${{ secrets.DOCKER_USER }}/admin_mycv:${{ github.sha }}
