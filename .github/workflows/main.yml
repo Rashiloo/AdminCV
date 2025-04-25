@@ -8,8 +8,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: admin-cv  # Nombre de la imagen (en minúsculas)
-  REPO_OWNER: ${{ github.repository_owner | lower }}  # Usuario en minúsculas
+  IMAGE_NAME: admin-cv
+  REPO_OWNER: ${{ toLowerCase(github.repository_owner) }}  # Función correcta
 
 jobs:
   build-and-push:
